@@ -1,0 +1,82 @@
+This is shaip. a Stateful Hierarchy Aware Icmp Prober
+-----------------------
+
+shaip was developed to solve the problems with using ICMP ping to
+monitor a distributed network from a central point. Its primary
+aim is to generate notification messages when network devices 
+or servers become unavailable, and specifically to avoid generating
+spurious alarms for equipment located behind a router or switch
+when the router/switch itself goes down.
+
+--------------- Config file ----------------
+Input data to the program is a file with two or three colon-separated
+fields on each line:
+
+foo:192.168.0.1
+bar:192.168.1.10:foo
+
+The first field is a label that will be presented in messages and used
+as a key in the state file that shaip uses to keep track of the last
+state of the device.
+
+The second field is the hostname or an IP address.
+
+The third field is the _parent_ of the node. If this field is empty,
+the device is considered to be a root of its own tree.
+
+The lines do not need to be in any particular order.
+
+---------------- State file ----------------
+The state file is maintained by shaip and consists of lines with two
+or three fields, colon-separated:
+
+bar:down:Tue Sep  7 09.01.11 2004
+foo:up
+
+The first field is the label or device name, same as the first field
+in the config file.
+
+The second field is the state, which can be "up", "down", "warning" or
+"error".
+
+The third field, if present, is the date and time the device went
+"down", and will only be there if the device is actually down.
+
+---------------- Command line ----------------
+
+shaip -c <config file> -s <state file> [-a] [-n <number of packets>]
+      [-P <pause between packets>] [-T <timeout for replies] [-v] [-t]
+      [-w]
+
+The optional parameters are as follows:
+
+ -a		Report state for all devices, regardless of last state.
+ -n #		Send # icmp probes to each device. Default is 3.
+ -P #		Pause # ms between packets. Default is 5.
+ -T #		Collect replies for # seconds after sending all the
+		probes. Default is 2.
+ -v		Verbose execution. Adding more "-v"'s increases
+		verbosity.
+ -t		Report mean roundtrip time for replies.
+ -w		Report WARNING state as WARNING instead of UP
+
+---------------- More info --------------------
+
+The state is determined as follows:
+
+If there is an error in transmitting an ICMP probe, the device's state
+will be ERROR.
+
+If no replies are received, the state will be DOWN.
+
+If replies are received to all the probes, the state will be UP.
+
+If some replies are received but some are missing, the state will be
+WARNING. This will be treated as UP unless "-w" is given.
+
+Unless "-a" is given, shaip will prune all subtrees below any node
+that is DOWN before reporting the state of the rest of the nodes. The
+nodes that are ignored in this way are effectively treated as "UP", by
+the program. Thus, when a downed device comes up again, nothing else
+will be reported unless one of the devices behind it turns out to be
+down too.
