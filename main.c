@@ -49,7 +49,10 @@
 
 void usage(char *progname)
 {
-  fprintf(stderr, "Usage: %s -c <configuration file> -s <state file> [-a] [-n <number of packets>] [-P <pause between packets>] [-T <timeout for replies] [-v] [-t] [-w]\n", progname);
+  fprintf(stderr, "Usage: %s -c <configuration file> -s <state file>\n", progname);
+  fprintf(stderr, "\t[-a (report all)][-n <number of packets>] [-P <interpacket delay>]\n");
+  fprintf(stderr, "\t[-T <timeout>] [-v (verbose)] [-t (report round trip time)]\n");
+  fprintf(stderr, "\t[-w (report warnings)] [-D <delay ms between runs>]\n");
 }
 
 void freedevicelist(devicenode *head)
@@ -193,6 +196,7 @@ int main(int argc, char *argv[])
   char *devname, *parentname;
   struct in_addr devaddress;
   int verbose=0;
+  int delay=1;
 
   devicenode devicelist=NULL,
     tmpnode, tmpnode2;
@@ -202,7 +206,7 @@ int main(int argc, char *argv[])
   socketnode rawsockets=NULL;
 
   // check options -c <configuration file> -s <state file> [-a]
-  while ((o=getopt(argc, argv, "c:s:an:P:T:tvw"))!=-1)
+  while ((o=getopt(argc, argv, "c:s:an:P:T:tvwD:"))!=-1)
     {
       switch (o)
 	{
@@ -232,6 +236,9 @@ int main(int argc, char *argv[])
 	  break;
 	case 'w':
 	  repwarn=1;
+	  break;
+	case 'D':
+	  delay=atoi(optarg);
 	  break;
 	default:
 	  usage(argv[0]);
@@ -393,7 +400,7 @@ int main(int argc, char *argv[])
 	printf ("%s: address=%s, srcaddress=%s, parent=%s, interface=%d\n", tmpnode->devicename, inet_ntoa(tmpnode->address), tmpbuf, tmpnode->parentname, tmpnode->interface_no);
       }
 
-  for (n=0; n<number_of_packets; n++)
+  for (n=0; (number_of_packets==0) || n<number_of_packets; n++)
     {
       if (verbose==1)
 	{
@@ -416,6 +423,7 @@ int main(int argc, char *argv[])
 	  receive_replies(rawsockets, devicelist, 4711+n, pause_between_packets, verbose>2);
 	}
       receive_replies(rawsockets, devicelist, 4711+n, receive_timeout, verbose>2);
+      usleep(1000*delay);
     }
   if (verbose==1)
     {

@@ -1,0 +1,73 @@
+.\"
+.Dd "Apr 11, 2006"
+.Dt ILADMIN 8
+.Os "Hans Liss"
+.Sh NAME
+.Nm shaip
+.Nd Stateful, Hierarchy-Aware ICMP Probe
+.Sh SYNOPSIS
+.Nm shaip
+.Fl c Ar config file
+.Fl s Ar state file
+.Op Fl a
+.Op Fl n Ar number of packets
+.Op Fl P Ar interpacket delay
+.Op Fl T Ar timeout
+.Op Fl v
+.Op Fl t
+.Op Fl w
+.Op Fl D Ar delay (ms) between runs
+.Sh DESCRIPTION
+.Nm shaip
+is a more advanced
+.Nm ping
+probe for systems monitoring, which can be configured to know about
+routers and other equipment on which other devices depend.
+.Pp
+.Nm shaip
+is meant to be used to monitor state changes in network hosts, and report
+systems or network equipment which have changed between being \fIup\fR and being
+\fIdown\fR.
+.Pp
+.Bl -tag -width flag
+.It Fl c Ar config file
+is the configuration file to use. The format is simple - each line consists
+of three fields separated by colons (":"): \fIname\fR, \fIaddress\fR and
+\fIparent\fR.
+If the object is not a dependant on any other object, the \fIparent\fR field
+(and the second delimiter) can be left out. The \fIaddress\fR field can be either
+an IP address or a DNS name.
+.It Fl s Ar state file
+is the file in which to store the last known state of the objects in the
+\fIconfig file\fR. This file must, of course, be writeable by
+.Nm shaip .
+.It Fl a
+tells shaip to report the current state of all the objects, disregarding
+the hierarchy.
+.It Fl n Ar number of runs
+sets the number of times
+.Nm shaip
+probes the objects. Default is 3 times.
+.It Fl P Ar interpacket delay
+sets the number of ms to wait between sending each packet. Default is 5 ms.
+.It Fl T Ar timeout
+sets the number of seconds to wait for replies.
+.It Fl v
+increase verbosity. each appearance of this flag will make
+.Nm shaip
+print out a little more information about what it is doing.
+.It Fl t
+reports roundtrip time for each object, provided
+.Fl a
+is also given.
+.Fl w
+tells
+.Nm shaip
+to report warnings when some but not all probes are lost to an object. Normally
+those objects are considered \fIup\fR.
+.Fl D Ar delay
+sets the delay between each run.
+.El
+.Sh BUGS
+.Sh SEE ALSO
+.Xr ping 8

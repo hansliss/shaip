@@ -26,6 +26,7 @@ DISTFILES =
 TARGET=$(PRODUCT)
 SOURCES=main.c find_interface.c icmpping.c stringfunc.c varlist.c makeaddress.c
 OBJS=main.o find_interface.o icmpping.o stringfunc.o varlist.o makeaddress.o
+MAN=$(PRODUCT).8
 LIB_OBJS=
 
 all: $(TARGET)
@@ -33,8 +34,8 @@ all: $(TARGET)
 install: all
 	$(top_srcdir)/mkinstalldirs $(bindir)
 	$(INSTALL) $(TARGET) $(bindir)/$(TARGET)
-##	$(top_srcdir)/mkinstalldirs $(mandir)/man1
-##	$(INSTALL) $(MAN) $(mandir)/man1/$(MAN)
+	$(top_srcdir)/mkinstalldirs $(mandir)/man8
+	$(INSTALL) $(MAN) $(mandir)/man8/$(MAN)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
