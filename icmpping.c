@@ -137,7 +137,7 @@ int send_icmpping(socketnode *rawsockets, devicenode dev, int ident)
 #endif
 
   tmpsock=*rawsockets;
-  while (tmpsock && memcmp(&(tmpsock->srcaddress), &(dev->srcaddress), sizeof(struct in_addr))!=0)
+  while (tmpsock && memcmp(&(tmpsock->srcaddress), &(dev->srcaddress.sin_addr), sizeof(struct in_addr))!=0)
     tmpsock = tmpsock->next;
 
   if (!tmpsock)
@@ -147,7 +147,7 @@ int send_icmpping(socketnode *rawsockets, devicenode dev, int ident)
 	  syslog(LOG_ERR, "malloc(): %m");
 	  return 0;
 	}
-      memcpy(&(tmpsock->srcaddress), &(dev->srcaddress), sizeof(struct in_addr));
+      memcpy(&(tmpsock->srcaddress), &(dev->srcaddress.sin_addr), sizeof(struct in_addr));
       if ((tmpsock->socket = socket(AF_INET, SOCK_RAW, 1)) < 0)
 	{
 	  syslog(LOG_ERR, "socket(): %m");
@@ -170,7 +170,7 @@ int send_icmpping(socketnode *rawsockets, devicenode dev, int ident)
       (*rawsockets)=tmpsock;
     }
 
-  return send_ICMP_echo_request(tmpsock->socket, &(dev->address), &(dev->srcaddress), ident);
+  return send_ICMP_echo_request(tmpsock->socket, &(dev->address.sin_addr), &(dev->srcaddress.sin_addr), ident);
 }
 
 /*
@@ -231,7 +231,7 @@ int recv_icmpreply(devicenode devices, unsigned char *buf,
   rttime=-1;
   for (tmpnode=devices; tmpnode; tmpnode=tmpnode->next)
     {
-      if (!memcmp(&(tmpnode->address), &(from->sin_addr), sizeof(struct in_addr)))
+      if (!memcmp(&(tmpnode->address.sin_addr), &(from->sin_addr), sizeof(struct in_addr)))
 	{
 	  tmpnode->nreplies++;
 	  tmpnode->gotreply=1;

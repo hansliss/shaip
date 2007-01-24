@@ -20,8 +20,8 @@ typedef struct devicenode_s
   char *devicename;
   char *parentname;
 
-  struct in_addr address;
-  struct in_addr srcaddress;
+  struct sockaddr_in address;
+  struct sockaddr_in srcaddress;
   int interface_no;
 
   int nreplies;

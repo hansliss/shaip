@@ -188,13 +188,22 @@ int main(int argc, char *argv[])
   time_t now;
   char timestamp[50];
   int repwarn=0;
+  int type,r;
+  char ifname[32];
+  struct routingdata_s rd;
+  struct addrinfo *devaddress;
+  char devip[32];
+  struct addrinfo hints={0,
+                         PF_UNSPEC,
+			 SOCK_STREAM,
+                         IPPROTO_TCP,
+                         0, NULL, NULL, NULL};
 
   static char line[BUFSIZE], tmpbuf[BUFSIZE], infilename[BUFSIZE];
   char *p;
   namelist items=NULL;
   int lno=0, n;
   char *devname, *parentname;
-  struct in_addr devaddress;
   int verbose=0;
   int delay=1;
 
@@ -204,6 +213,8 @@ int main(int argc, char *argv[])
   struct timezone tz;
 
   socketnode rawsockets=NULL;
+
+  memset(&rd, 0, sizeof(rd));
 
   // check options -c <configuration file> -s <state file> [-a]
   while ((o=getopt(argc, argv, "c:s:an:P:T:tvwD:"))!=-1)
@@ -264,6 +275,7 @@ int main(int argc, char *argv[])
       perror(infilename);
       return -2;
     }
+  netlink_maybeupdateroutes(&rd,0);
   while (fgets(line, sizeof(line), infile))
     {
       lno++;
@@ -283,14 +295,18 @@ int main(int argc, char *argv[])
 	  return -3;
 	}
       devname=items->name;
-      if (!makeaddress(items->next->name, &devaddress))
-	{
-	  fprintf(stderr, "Bad address %s in %s on line %d\n", items->next->name,
-		  conffilename, lno);
-	  fclose(infile);
-	  freedevicelist(&devicelist);
-	  return -4;
-	}
+      if ((r=getaddrinfo(items->next->name, NULL, &hints, &devaddress))!=0) {
+	if (r==EAI_SYSTEM) perror("getaddrinfo()");
+	else fprintf(stderr, "getaddrinfo(): %s\n", gai_strerror(r));
+      }
+      getnameinfo(devaddress->ai_addr, devaddress->ai_addrlen, devip, sizeof(devip), NULL, 0, NI_NUMERICHOST);
+      if (r != 0 || devaddress->ai_family != AF_INET) {
+	fprintf(stderr, "Bad address %s in %s on line %d\n", items->next->name,
+		conffilename, lno);
+	fclose(infile);
+	freedevicelist(&devicelist);
+	return -4;
+      }
       if (items->next->next && strlen(items->next->next->name))
 	parentname=items->next->next->name;
       else
@@ -315,15 +331,15 @@ int main(int argc, char *argv[])
       tmpnode->devicename=strdup(devname);
       tmpnode->parentname=strdup(parentname);
       tmpnode->rttime=0;
-      memcpy(&(tmpnode->address), &devaddress, sizeof(devaddress));
-      if ((tmpnode->interface_no = find_interface(&(tmpnode->address), &(tmpnode->srcaddress), tmpbuf, sizeof(tmpbuf))) < 0)
-	{
-	  fprintf(stderr, "Unreachable device %s in %s on line %d\n", inet_ntoa(devaddress),
-		  conffilename, lno);
-	  fclose(infile);
-	  freedevicelist(&devicelist);
-	  return -5;
-	}
+      
+      memcpy(&(tmpnode->address), devaddress->ai_addr, devaddress->ai_addrlen);
+      if ((type=find_interface(&rd, (struct sockaddr *)(&(tmpnode->address)), sizeof(tmpnode->address), &(tmpnode->interface_no), ifname, sizeof(ifname),
+			       (struct sockaddr *)(&(tmpnode->srcaddress)), sizeof(tmpnode->srcaddress), 0)) == USER_TYPE_NONE) {
+	fprintf(stderr, "Unreachable device %s in %s on line %d\n", devip, conffilename, lno);
+	fclose(infile);
+	freedevicelist(&devicelist);
+	return -5;
+      }
       tmpnode->next=devicelist;
       devicelist=tmpnode;
 
@@ -396,8 +412,8 @@ int main(int argc, char *argv[])
   if (verbose>1)
     for (tmpnode=devicelist; tmpnode; tmpnode=tmpnode->next)
       {
-	strcpy(tmpbuf, inet_ntoa(tmpnode->srcaddress));
-	printf ("%s: address=%s, srcaddress=%s, parent=%s, interface=%d\n", tmpnode->devicename, inet_ntoa(tmpnode->address), tmpbuf, tmpnode->parentname, tmpnode->interface_no);
+	strcpy(tmpbuf, inet_ntoa(tmpnode->srcaddress.sin_addr));
+	printf ("%s: address=%s, srcaddress=%s, parent=%s, interface=%d\n", tmpnode->devicename, inet_ntoa(tmpnode->address.sin_addr), tmpbuf, tmpnode->parentname, tmpnode->interface_no);
       }
 
   for (n=0; (number_of_packets==0) || n<number_of_packets; n++)
