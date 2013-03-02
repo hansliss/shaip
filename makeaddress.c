@@ -38,7 +38,7 @@ int makeaddress(char *name_or_ip, struct in_addr *res)
   struct hostent *listen_he;
   if (!strcmp(name_or_ip, "any"))
     {
-      memcpy(res, INADDR_ANY, sizeof(res));
+      memset(res, 0, sizeof(res));
       return 1;
     }
   

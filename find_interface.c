@@ -254,7 +254,9 @@ stringdef s_rtm_msgtypes[] = {
   {RTM_DELACTION, "RTM_DELACTION", 0},
   {RTM_GETACTION, "RTM_GETACTION", 0},
   {RTM_NEWPREFIX, "RTM_NEWPREFIX", 0},
+#ifdef RTM_GETPREFIX
   {RTM_GETPREFIX, "RTM_GETPREFIX", 0},
+#endif
   {RTM_GETMULTICAST, "RTM_GETMULTICAST", 0},
   {RTM_GETANYCAST, "RTM_GETANYCAST", 0},
   {0, 0, 0}
@@ -369,7 +371,7 @@ int find_interface(routingdata d,
 	  strncpy(ifname, nm, ifnamelen);
 	else strncpy(ifname, "N/A", ifnamelen);
 	ifname[ifnamelen-1]='\0';
-	if (salen < sizeof(struct sockaddr_storage)) syslog(LOG_ERR, "find_interface(): source_address buffer too small");
+	//	if (salen < sizeof(struct sockaddr_storage)) syslog(LOG_ERR, "find_interface(): source_address buffer too small");
 	memcpy(source_address, &(tmpnode->source_address), salen);
 	return (tmpnode->family==AF_INET && tmpnode->islocal)?USER_TYPE_ARPPING:USER_TYPE_PING;
       }
@@ -384,7 +386,7 @@ int free_interfacelist(interfacenode *list, int debug) {
   while ((*list)!=NULL) {
     tmpnode=(*list);
     (*list)=(*list)->next;
-    if (debug) fprintf(stderr, "Freeing interface %d (at 0x%08X) with %d addresses\n", tmpnode->ifindex, (unsigned int)tmpnode, tmpnode->addrcount);
+    if (debug) fprintf(stderr, "Freeing interface %d (at 0x%08lX) with %d addresses\n", tmpnode->ifindex, (unsigned long)tmpnode, tmpnode->addrcount);
     if (tmpnode->addresses) free(tmpnode->addresses);
     free(tmpnode);
   }
@@ -407,7 +409,7 @@ int add_interface_address(interfacenode *list, int ifindex, struct sockaddr *add
     memset(tmpnode->addresses, 0, tmpnode->addralloc * sizeof(struct sockaddr_storage));
     tmpnode->ifindex=ifindex;
     memcpy(&(tmpnode->addresses[(tmpnode->addrcount)++]), address, salen);
-    if (debug) fprintf(stderr, "Interface %d (at 0x%08X) now has %d addresses\n", tmpnode->ifindex, (unsigned int)tmpnode, tmpnode->addrcount);
+    if (debug) fprintf(stderr, "Interface %d (at 0x%08lX) now has %d addresses\n", tmpnode->ifindex, (unsigned long)tmpnode, tmpnode->addrcount);
     (*list)=tmpnode;
   } else {
     if ((*list)->addralloc <= (*list)->addrcount) {
@@ -416,7 +418,7 @@ int add_interface_address(interfacenode *list, int ifindex, struct sockaddr *add
       (*list)->addresses=(struct sockaddr_storage *)realloc((*list)->addresses, (*list)->addralloc * sizeof(struct sockaddr_storage));
     }
     memcpy(&((*list)->addresses[((*list)->addrcount)++]), address, salen);
-    if (debug) fprintf(stderr, "Interface %d (at 0x%08X) now has %d addresses\n", (*list)->ifindex, (unsigned int)(*list), (*list)->addrcount);
+    if (debug) fprintf(stderr, "Interface %d (at 0x%08lX) now has %d addresses\n", (*list)->ifindex, (unsigned long)(*list), (*list)->addrcount);
   }
   return 1;
 }
@@ -434,13 +436,13 @@ int set_interface_name(interfacenode *list, int ifindex, char *name, int debug) 
       tmpnode->ifname[sizeof(tmpnode->ifname) - 1] = '\0';
     }
     (*list)=tmpnode;
-    if (debug) fprintf(stderr, "Interface %d (at 0x%08X) now has the name %s\n", (*list)->ifindex, (unsigned int)(*list), (*list)->ifname);
+    if (debug) fprintf(stderr, "Interface %d (at 0x%08lX) now has the name %s\n", (*list)->ifindex, (unsigned long)(*list), (*list)->ifname);
   } else {
     if (name) {
       strncpy((*list)->ifname, name, sizeof((*list)->ifname));
       (*list)->ifname[sizeof((*list)->ifname) - 1] = '\0';
     } else (*list)->ifname[0] = '\0';
-    if (debug) fprintf(stderr, "Interface %d (at 0x%08X) now has the name %s\n", (*list)->ifindex, (unsigned int)(*list), (*list)->ifname);
+    if (debug) fprintf(stderr, "Interface %d (at 0x%08lX) now has the name %s\n", (*list)->ifindex, (unsigned long)(*list), (*list)->ifname);
   }
   return 1;
 }

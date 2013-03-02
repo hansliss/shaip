@@ -20,14 +20,18 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 bindir = @bindir@
 mandir = @mandir@
+datarootdir = @datarootdir@
 
 DISTFILES =
 
 TARGET=$(PRODUCT)
 SOURCES=main.c find_interface.c icmpping.c stringfunc.c varlist.c makeaddress.c
 OBJS=main.o find_interface.o icmpping.o stringfunc.o varlist.o makeaddress.o
+HEADERS=devicenode.h find_interface.h icmpping.h makeaddress.h socketnode.h stringfunc.h varlist.h
 MAN=$(PRODUCT).8
 LIB_OBJS=
+DISTSRC=aclocal.m4 config.h.in configure configure.in $(SOURCES) $(HEADERS) install-sh Makefile.in mkinstalldirs README run_shaip.sh shaip.8 shaip.conf shaip.state studstad.conf
+DISTBIN=$(TARGETS) README run_shaip.sh shaip.8 shaip.conf shaip.state studstad.conf
 
 all: $(TARGET)
 
@@ -53,11 +57,17 @@ config-clean: confclean-recursive
 confclean-recursive: cfg-clean
 
 cfg-clean:
-	/bin/rm -f Makefile config.h config.status config.cache config.log
+	/bin/rm -f Makefile config.h config.status config.cache config.log $(PRODUCT)-$(VERSION)-*.tar.gz*
 
 mostlyclean: clean
 
 maintainer-clean: clean
+
+package: all
+	tar czf $(PRODUCT)-$(VERSION)-bin.tar.gz $(DISTBIN)
+	md5sum $(PRODUCT)-$(VERSION)-bin.tar.gz > $(PRODUCT)-$(VERSION)-bin.tar.gz.md5
+	tar czf $(PRODUCT)-$(VERSION)-src.tar.gz $(DISTSRC)
+	md5sum $(PRODUCT)-$(VERSION)-src.tar.gz > $(PRODUCT)-$(VERSION)-src.tar.gz.md5
 
 # automatic re-running of configure if the configure.in file has changed
 ${srcdir}/configure: configure.in 

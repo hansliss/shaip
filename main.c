@@ -99,7 +99,7 @@ void receive_replies(socketnode allsockets, devicenode devicelist, int ident, in
   struct timeval select_timeout;
   static unsigned char packet[4096];
   unsigned char from[16384];
-  int alen;
+  socklen_t alen;
   struct timeval starttime, endtime;
   struct timezone tz;
   devicenode tmpnode;
