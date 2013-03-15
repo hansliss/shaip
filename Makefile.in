@@ -48,7 +48,7 @@ $(TARGET): $(OBJS)
 $(OBJS): $(SOURCES)
 
 clean:
-	/bin/rm -f $(TARGET) *.o core
+	/bin/rm -f $(TARGET) *.o core $(PRODUCT)-$(VERSION)-*.tar.gz*
 
 distclean: clean config-clean
 
@@ -57,7 +57,7 @@ config-clean: confclean-recursive
 confclean-recursive: cfg-clean
 
 cfg-clean:
-	/bin/rm -f Makefile config.h config.status config.cache config.log $(PRODUCT)-$(VERSION)-*.tar.gz*
+	/bin/rm -f Makefile config.h config.status config.cache config.log
 
 mostlyclean: clean
 
